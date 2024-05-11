@@ -145,6 +145,7 @@ const DateModel = mongoose.model('Date', dateSchema);
 
 app.post('/api/dates', async (req, res) => {
   try {
+    
       const {id,title,password, date, time } = req.body;
       const newDate = await DateModel.create({title,id,password, date, time });
       res.status(201).json(newDate);
@@ -159,6 +160,7 @@ app.get('/api/dates', async (req, res) => {
   try {
     // Fetch all dates from the database
     const dates = await DateModel.find();
+    const datesLenght=dates.length;
     res.status(200).json(dates);
   } catch (err) {
     console.error('Error fetching dates:', err);
@@ -194,7 +196,9 @@ app.post("/register", async (req, res) => {
 app.get('/getAlluser', async (req, res) => {
   try {
     const allUser = await Employee.find({});
-    res.send({ status: "ok", data: allUser }); // Sending fetched data in response
+    const usersCount = allUser.length; 
+    res.send({ status: "ok", data: allUser});
+  
   } catch (error) {
     console.error("Error fetching all users:", error);
     res.status(500).send({ error: "Error fetching all users" }); // Sending error response
@@ -225,27 +229,22 @@ app.post("/adminRegister", async (req, res) => {
 
   try {
     const oldUser = await Admin.findOne({ email });
+    const hashedPas=await bcrypt.hash(password,10)
     if (oldUser) {
       res.send({ error: "User already exists" });
+
     } else {
       await Admin.create({
         fname,
         lname,
         email,
-        password,
+        password:hashedPas,
       });
       res.send({ status: "ok" });
     }
   } catch (error) {
     res.send({ status: "error" });
   }
-  if(await bcrypt.compare(password,user.password)){
-    const token=jwt.sign({},JWT_SECRET);
-  }
-  if(res.status(201)){
-    return res.json({error:'error'})
-  }
-  res.json({status:"error",error:"invalid password"})
 });
 
 
@@ -278,6 +277,21 @@ app.post("/adminlogin", async (req, res) => {
 });
 
 //get data from admin
+
+app.get('/getAdmin',async(req,res)=>{
+  try{
+    const allAdmin=await Admin.find({});
+    const allAdminLenght=allAdmin.length;
+
+    res.send({status:"ok",data:allAdmin});
+    
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    res.status(500).send({ error: "Error fetching all users" }); // Sending error response
+  }
+})
+
+
 
 
 
