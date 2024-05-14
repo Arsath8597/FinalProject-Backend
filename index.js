@@ -192,6 +192,7 @@ app.post("/register", async (req, res) => {
   }
 });
 
+
 //get userAll user
 app.get('/getAlluser', async (req, res) => {
   try {
@@ -246,33 +247,39 @@ app.post("/adminRegister", async (req, res) => {
     res.send({ status: "error" });
   }
 });
-
+//delete admin
+app.delete('/deleteAdmin/:adminId', async (req, res) => {
+  try {
+    const deletedAdmin = await Admin.findByIdAndDelete(req.params.adminId);
+    if (!deletedAdmin) {
+      return res.status(404).send({ error: "User not found" });
+    }
+    res.send({ status: "ok", data: deletedAdmin });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).send({ error: "Error deleting user" });
+  }
+});
 
 //admin login 
 app.post("/adminlogin", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await Admin.findOne({ email });
+      const user = await Admin.findOne({ email });
+      if (!user) {
+          return res.json({ error: "User not found" });
+      }
 
-    if (!user) {
-      // User not found
-      res.status(401).send({ error: "Invalid email or password" });
-      return;
-    }
-
-    // Check if the password is correct
-    if (user.password !== password) {
-      // Incorrect password
-      res.status(401).send({ error: "Invalid email or password" });
-      return;
-    }
-
-    // If email and password are correct, send a success response
-    res.send({ status: "ok", user: { fname: user.fname, lname: user.lname, email: user.email } });
+    const passwordMatch=await bcrypt.compare(password,user.password)
+      if (!passwordMatch) {
+          return res.json({ error: "Invalid password" });
+      }
+      const token = jwt.sign({ id: user._id }, 'your_secret_key');
+      res.json({ status: "ok", data: token });
   } catch (error) {
-    // Error while processing the request
-    res.status(500).send({ error: "Internal server error" });
+      console.error("Error during login:", error);
+      res.json({ error: "Internal server error" });
   }
 });
 
